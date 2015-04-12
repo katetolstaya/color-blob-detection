@@ -11,6 +11,7 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -42,6 +43,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
+    private boolean               trigger=false;
+    private int              threshold = 10;
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
@@ -222,21 +225,63 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
 
-            mDetector1.process(mRgba);
-            List<MatOfPoint> contours1 = mDetector1.getContours();
+        mDetector1.process(mRgba);
+        List<MatOfPoint> contours1 = mDetector1.getContours();
 
-/*            List<List<Integer>> points1 = new ArrayList<List<Integer>>();
-            for (int i = 0)
-            for(MatOfPoint p : contours1){
-                points1.add(new List<Integer>)
-            }*/
+        List<List<Integer>> points1 = new ArrayList<List<Integer>>();
+        for (int i = 0; i < contours1.size(); i++){
+             int x1 = 0;
+             int y1=0;
+            int count = 0;
+            List<Point> points = contours1.get(i).toList();
+            for (Point p: points) {
+                x1+=p.x;
+                y1+=p.y;
+                count ++;
+            }
+            List<Integer> list = new ArrayList<Integer>();
+            list.add(x1/count);
+            list.add(y1/count);
+            list.add(count);
+            points1.add(list);
+    }
+
+        Log.e("Contour 1",points1.get(0).toString());
+
 
              mDetector2.process(mRgba);
             List<MatOfPoint> contours2 = mDetector2.getContours();
 
+        List<List<Integer>> points2 = new ArrayList<List<Integer>>();
+        for (int i = 0; i < contours2.size(); i++){
+            int x1 = 0;
+            int y1=0;
+            int count = 0;
+            List<Point> points = contours2.get(i).toList();
+            for (Point p: points) {
+                x1+=p.x;
+                y1+=p.y;
+                count ++;
+            }
+            List<Integer> list = new ArrayList<Integer>();
+            list.add(x1/count);
+            list.add(y1/count);
+            list.add(count);
+            points1.add(list);
+        }
+
+        Log.e("Contour 2",points2.get(0).toString());
+        boolean trigger = false;
+        if (points2.get(0).get(2)> threshold && points1.get(0).get(2)>threshold){
+            trigger = true;
+            Log.e("Detected","2 points");
+        }else{
+            trigger = false;
+            Log.e("Not Detected","2 points");
+        }
 
             Log.e(TAG, "Contours 1 count: " + contours1.size());
-        Log.e(TAG, "Contours 2 count: " + contours1.size());
+        Log.e(TAG, "Contours 2 count: " + contours2.size());
 
           Imgproc.drawContours(mRgba, contours1, -1, CONTOUR_COLOR);
         Imgproc.drawContours(mRgba, contours2, -1, CONTOUR_COLOR);
